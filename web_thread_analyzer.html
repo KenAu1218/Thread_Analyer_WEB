@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,14 +9,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet">
+        rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
+
         .font-gameboy {
             font-family: 'Press Start 2P', cursive;
         }
+
         /* Custom spinner animation */
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
@@ -25,77 +28,84 @@
             border-left-color: #ffffff;
             animation: spin 1s ease infinite;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
+
 <body class="bg-sky-400 min-h-screen flex items-center justify-center p-4">
 
-<div class="w-full max-w-2xl mx-auto">
-    <header class="text-center mb-8">
-        <h1 class="font-gameboy text-3xl md:text-4xl text-white text-shadow-lg">Thread Sentiment
-            Analyzer</h1>
-    </header>
+    <div class="w-full max-w-2xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="font-gameboy text-3xl md:text-4xl text-white text-shadow-lg">Thread Sentiment
+                Analyzer</h1>
+        </header>
 
-    <main class="bg-white rounded-2xl shadow-2xl p-6 md:p-8">
-        <div class="flex flex-col md:flex-row gap-4">
-            <input type="text" id="threadUrl" placeholder="Paste a Thread URL here..."
-                   class="flex-grow p-4 bg-gray-100 rounded-xl border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition">
-            <button id="analyzeBtn"
+        <main class="bg-white rounded-2xl shadow-2xl p-6 md:p-8">
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" id="threadUrl" placeholder="Paste a Thread URL here..."
+                    class="flex-grow p-4 bg-gray-100 rounded-xl border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition">
+                <button id="analyzeBtn"
                     class="bg-sky-500 text-white font-bold py-4 px-8 rounded-xl hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 transform hover:scale-105 transition-transform duration-300 ease-in-out shadow-lg">
-                Analyze
-            </button>
-        </div>
+                    Analyze
+                </button>
+            </div>
 
 
-        <!-- Results Section -->
-        <div id="results" class="mt-8 hidden">
-            <h2 class="text-2xl font-bold text-gray-800 border-b-2 pb-2 mb-4">Analysis Result</h2>
+            <!-- Results Section -->
+            <div id="results" class="mt-8 hidden">
+                <h2 class="text-2xl font-bold text-gray-800 border-b-2 pb-2 mb-4">Analysis Result</h2>
 
-            <!-- Main Thread -->
-            <div class="bg-gray-50 p-4 rounded-xl">
-                <div class="flex items-start space-x-3">
-                    <img src="https://placehold.co/48x48/E2E8F0/4A5568?text=AV" id="userAvatar"
-                         class="w-12 h-12 rounded-full" alt="User Avatar">
-                    <div>
-                        <p class="font-semibold text-gray-900" id="username">@username</p>
-                        <p class="text-gray-700 mt-1" id="threadText">This is where the text of the
-                            analyzed thread will appear.</p>
+                <!-- Main Thread -->
+                <div class="bg-gray-50 p-4 rounded-xl">
+                    <div class="flex items-start space-x-3">
+                        <img src="https://placehold.co/48x48/E2E8F0/4A5568?text=AV" id="userAvatar"
+                            class="w-12 h-12 rounded-full" alt="User Avatar">
+                        <div>
+                            <p class="font-semibold text-gray-900" id="username">@username</p>
+                            <p class="text-gray-700 mt-1" id="threadText">This is where the text of the
+                                analyzed thread will appear.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sentiment Score -->
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Sentiment</h3>
+                    <div id="sentimentResult" class="p-4 rounded-xl flex items-center justify-between">
+                        <span class="text-xl font-bold" id="sentimentLabel">NEUTRAL</span>
+                        <span class="text-2xl font-bold" id="sentimentScore">0.00</span>
+                    </div>
+                </div>
+
+                <!-- Replies Section -->
+                <div id="repliesContainer" class="mt-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Replies</h3>
+                    <div id="repliesList" class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                        <!-- Replies will be dynamically inserted here -->
                     </div>
                 </div>
             </div>
 
-            <!-- Sentiment Score -->
-            <div class="mt-6">
-                <h3 class="text-lg font-semibold text-gray-700 mb-2">Sentiment</h3>
-                <div id="sentimentResult" class="p-4 rounded-xl flex items-center justify-between">
-                    <span class="text-xl font-bold" id="sentimentLabel">NEUTRAL</span>
-                    <span class="text-2xl font-bold" id="sentimentScore">0.00</span>
-                </div>
+            <!-- Loading Spinner -->
+            <div id="loader"
+                class="mt-8 hidden flex-col items-center justify-center text-center bg-sky-500 p-8 rounded-2xl text-white">
+                <div class="spinner mb-4"></div>
+                <p class="font-semibold text-lg">Analyzing Thread...</p>
+                <p class="text-sm">Please wait while we scrape and analyze the data.</p>
             </div>
 
-            <!-- Replies Section -->
-            <div id="repliesContainer" class="mt-6">
-                <h3 class="text-lg font-semibold text-gray-700 mb-2">Replies</h3>
-                <div id="repliesList" class="space-y-3 max-h-60 overflow-y-auto pr-2">
-                    <!-- Replies will be dynamically inserted here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading Spinner -->
-        <div id="loader"
-             class="mt-8 hidden flex-col items-center justify-center text-center bg-sky-500 p-8 rounded-2xl text-white">
-            <div class="spinner mb-4"></div>
-            <p class="font-semibold text-lg">Analyzing Thread...</p>
-            <p class="text-sm">Please wait while we scrape and analyze the data.</p>
-        </div>
-
-    </main>
-</div>
-<!-- 
+        </main>
+    </div>
+    <!-- 
 <script>
     const analyzeBtn = document.getElementById('analyzeBtn');
     const threadUrlInput = document.getElementById('threadUrl');
@@ -206,118 +216,155 @@
 </script> -->
 
 
-<script>
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    const threadUrlInput = document.getElementById('threadUrl');
-    const resultsSection = document.getElementById('results');
-    const loader = document.getElementById('loader');
-    
-    // Result elements
-    const userAvatar = document.getElementById('userAvatar');
-    const username = document.getElementById('username');
-    const threadText = document.getElementById('threadText');
-    const sentimentResult = document.getElementById('sentimentResult');
-    const sentimentLabel = document.getElementById('sentimentLabel');
-    const sentimentScore = document.getElementById('sentimentScore');
-    const repliesList = document.getElementById('repliesList');
-    const repliesContainer = document.getElementById('repliesContainer');
+    <script>
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const threadUrlInput = document.getElementById('threadUrl');
+        const resultsSection = document.getElementById('results');
+        const loader = document.getElementById('loader');
 
-    // --- NEW: API Call Logic ---
-    analyzeBtn.addEventListener('click', async () => {
-        const urlToAnalyze = threadUrlInput.value;
-        if (!urlToAnalyze) {
-            alert("Please enter a Thread URL to analyze.");
-            return;
-        }
+        // Result elements
+        const userAvatar = document.getElementById('userAvatar');
+        const username = document.getElementById('username');
+        const threadText = document.getElementById('threadText');
+        const sentimentResult = document.getElementById('sentimentResult');
+        const sentimentLabel = document.getElementById('sentimentLabel');
+        const sentimentScore = document.getElementById('sentimentScore');
+        const repliesList = document.getElementById('repliesList');
+        const repliesContainer = document.getElementById('repliesContainer');
 
-        // 1. Hide results and show loader
-        resultsSection.classList.add('hidden');
-        loader.classList.remove('hidden');
-        loader.classList.add('flex');
-
-        try {
-            // 2. Make a POST request to our Flask server
-            const response = await fetch('http://127.0.0.1:5000/analyze', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ url: urlToAnalyze }),
-            });
-
-            if (!response.ok) {
-                // Handle server errors
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Something went wrong on the server.');
+        // --- NEW: API Call Logic ---
+        analyzeBtn.addEventListener('click', async () => {
+            const urlToAnalyze = threadUrlInput.value;
+            if (!urlToAnalyze) {
+                alert("Please enter a Thread URL to analyze.");
+                return;
             }
 
-            // 3. Get the real data back from the server
-            const data = await response.json();
+            // 1. Hide results and show loader
+            resultsSection.classList.add('hidden');
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+
+            try {
+                // 2. Make a POST request to our Flask server
+                const response = await fetch('http://127.0.0.1:5000/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: urlToAnalyze }),
+                });
+
+                if (!response.ok) {
+                    // Handle server errors
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Something went wrong on the server.');
+                }
+
+                // 3. Get the real data back from the server
+                const data = await response.json();
+
+                // 4. Populate the UI with the real data
+                populateResults(data);
+                resultsSection.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`An error occurred: ${error.message}`);
+            } finally {
+                // 5. Always hide the loader when done
+                loader.classList.add('hidden');
+                loader.classList.remove('flex');
+            }
+        });
+
+        function populateResults(data) {
+            // This function remains the same as before, but now receives real data!
+            // Populate main thread
+            // console.log("data.thread.user_pic_base64" ,data.thread.user_pic_base64)
+            // userAvatar.src = data.thread.user_pic_base64 || 'https://placehold.co/48x48/E2E8F0/4A5568?text=AV';
+
+            console.log("data.thread", data.thread)
+            console.log("data.thread.user_pic", data.thread.user_pic)
+            if (data.thread.user_pic) {
+                // We construct a URL to our own server's proxy endpoint.
+                // encodeURIComponent is important to handle special characters in the URL.
+                const proxyUrl = `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(data.thread.user_pic)}`;
+
+
+                console.log("proxyUrl", proxyUrl)
+                // Set the image source to our proxy URL.
+                // The browser will now fetch the image from our server.
+                userAvatar.src = proxyUrl;
+            } else {
+                // Fallback to the placeholder if the URL is missing
+                userAvatar.src = 'https://placehold.co/48x48/E2E8F0/4A5568?text=AV';
+            }
+
+            username.textContent = `@${data.thread.username}`;
+            threadText.textContent = data.thread.text;
+
+            // Populate sentiment
+            const sentiment = data.thread.sentiment;
+            sentimentLabel.textContent = sentiment.label.toUpperCase();
+            sentimentScore.textContent = sentiment.score.toFixed(2);
+
+            // Update sentiment color
+            sentimentResult.className = 'p-4 rounded-xl flex items-center justify-between'; // Reset classes
+            if (sentiment.label.toLowerCase() === 'positive') {
+                sentimentResult.classList.add('bg-green-100', 'text-green-800');
+            } else if (sentiment.label.toLowerCase() === 'negative') {
+                sentimentResult.classList.add('bg-red-100', 'text-red-800');
+            } else {
+                sentimentResult.classList.add('bg-gray-100', 'text-gray-800');
+            }
+
+            // Populate replies
+            repliesList.innerHTML = '';
+            if (data.replies && data.replies.length > 0) {
+                repliesContainer.classList.remove('hidden');
+                data.replies.forEach(reply => {
+                    const sentimentColor = getSentimentColor(reply.sentiment.label);
+
+                    let proxyUrl = 'https://placehold.co/32x32/E2E8F0/4A5568?text=AV'; // Default placeholder
+                    if (reply.user_pic) {
+                        proxyUrl = `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(reply.user_pic)}`;
+                    }
+
+                    const replyElement = document.createElement('div');
+                    replyElement.className = 'bg-gray-50 p-3 rounded-lg';
+                    replyElement.innerHTML = `
+
+              
+ <div class="flex items-start space-x-3">
             
-            // 4. Populate the UI with the real data
-            populateResults(data);
-            resultsSection.classList.remove('hidden');
-
-        } catch (error) {
-            console.error('Error:', error);
-            alert(`An error occurred: ${error.message}`);
-        } finally {
-            // 5. Always hide the loader when done
-            loader.classList.add('hidden');
-            loader.classList.remove('flex');
-        }
-    });
-
-    function populateResults(data) {
-        // This function remains the same as before, but now receives real data!
-        // Populate main thread
-        userAvatar.src = data.thread.user_pic || 'https://placehold.co/48x48/E2E8F0/4A5568?text=AV';
-        username.textContent = `@${data.thread.username}`;
-        threadText.textContent = data.thread.text;
-
-        // Populate sentiment
-        const sentiment = data.thread.sentiment;
-        sentimentLabel.textContent = sentiment.label.toUpperCase();
-        sentimentScore.textContent = sentiment.score.toFixed(2);
-
-        // Update sentiment color
-        sentimentResult.className = 'p-4 rounded-xl flex items-center justify-between'; // Reset classes
-        if (sentiment.label.toLowerCase() === 'positive') {
-            sentimentResult.classList.add('bg-green-100', 'text-green-800');
-        } else if (sentiment.label.toLowerCase() === 'negative') {
-            sentimentResult.classList.add('bg-red-100', 'text-red-800');
-        } else {
-            sentimentResult.classList.add('bg-gray-100', 'text-gray-800');
-        }
-
-        // Populate replies
-        repliesList.innerHTML = '';
-        if (data.replies && data.replies.length > 0) {
-            repliesContainer.classList.remove('hidden');
-            data.replies.forEach(reply => {
-                const sentimentColor = getSentimentColor(reply.sentiment.label);
-                const replyElement = document.createElement('div');
-                replyElement.className = 'bg-gray-50 p-3 rounded-lg';
-                replyElement.innerHTML = `
-                    <div class="flex justify-between items-start">
-                         <p class="font-semibold text-sm text-gray-800">@${reply.username}</p>
+            <!-- This is the new avatar image -->
+            <img src="${proxyUrl}" class="w-8 h-8 rounded-full bg-gray-200" alt="User Avatar">
+            
+            <div class="flex-grow">
+                <div class="flex justify-between items-start">
+                     <p class="font-semibold text-sm text-gray-800">@${reply.username}</p>
                          <span class="text-xs font-bold ${sentimentColor.text} ${sentimentColor.bg} px-2 py-1 rounded-full">${reply.sentiment.label.toUpperCase()}</span>
-                    </div>
-                    <p class="text-gray-600 text-sm mt-1">${reply.text}</p>
+                </div>
+                <p class="text-gray-600 text-sm mt-1">${reply.text}</p>
+            </div>
+        </div>
+
                 `;
-                repliesList.appendChild(replyElement);
-            });
-        } else {
-             repliesContainer.classList.add('hidden');
+                    repliesList.appendChild(replyElement);
+                });
+            } else {
+                repliesContainer.classList.add('hidden');
+            }
         }
-    }
-    
-    function getSentimentColor(label) {
-        const lowerLabel = label.toLowerCase();
-        if (lowerLabel === 'positive') return { bg: 'bg-green-100', text: 'text-green-700' };
-        if (lowerLabel === 'negative') return { bg: 'bg-red-100', text: 'text-red-700' };
-        return { bg: 'bg-gray-200', text: 'text-gray-700' };
-    }
-</script>
+
+        function getSentimentColor(label) {
+            const lowerLabel = label.toLowerCase();
+            if (lowerLabel === 'positive') return { bg: 'bg-green-100', text: 'text-green-700' };
+            if (lowerLabel === 'negative') return { bg: 'bg-red-100', text: 'text-red-700' };
+            return { bg: 'bg-gray-200', text: 'text-gray-700' };
+        }
+    </script>
 </body>
+
 </html>
