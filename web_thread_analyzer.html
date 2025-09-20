@@ -19,7 +19,6 @@
             font-family: 'Press Start 2P', cursive;
         }
 
-        /* Custom spinner animation */
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
             width: 36px;
@@ -59,12 +58,9 @@
                 </button>
             </div>
 
-
-            <!-- Results Section -->
             <div id="results" class="mt-8 hidden">
                 <h2 class="text-2xl font-bold text-gray-800 border-b-2 pb-2 mb-4">Analysis Result</h2>
 
-                <!-- Main Thread -->
                 <div class="bg-gray-50 p-4 rounded-xl">
                     <div class="flex items-start space-x-3">
                         <img src="https://placehold.co/48x48/E2E8F0/4A5568?text=AV" id="userAvatar"
@@ -73,11 +69,12 @@
                             <p class="font-semibold text-gray-900" id="username">@username</p>
                             <p class="text-gray-700 mt-1" id="threadText">This is where the text of the
                                 analyzed thread will appear.</p>
+                            
+                            <div id="threadMedia" class="mt-3 rounded-lg overflow-hidden max-w-sm"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sentiment Score -->
                 <div class="mt-6">
                     <h3 class="text-lg font-semibold text-gray-700 mb-2">Sentiment</h3>
                     <div id="sentimentResult" class="p-4 rounded-xl flex items-center justify-between">
@@ -86,16 +83,13 @@
                     </div>
                 </div>
 
-                <!-- Replies Section -->
                 <div id="repliesContainer" class="mt-6">
                     <h3 class="text-lg font-semibold text-gray-700 mb-2">Replies</h3>
                     <div id="repliesList" class="space-y-3 max-h-60 overflow-y-auto pr-2">
-                        <!-- Replies will be dynamically inserted here -->
                     </div>
                 </div>
             </div>
 
-            <!-- Loading Spinner -->
             <div id="loader"
                 class="mt-8 hidden flex-col items-center justify-center text-center bg-sky-500 p-8 rounded-2xl text-white">
                 <div class="spinner mb-4"></div>
@@ -105,116 +99,6 @@
 
         </main>
     </div>
-    <!-- 
-<script>
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    const threadUrlInput = document.getElementById('threadUrl');
-    const resultsSection = document.getElementById('results');
-    const loader = document.getElementById('loader');
-
-    // Result elements
-    const userAvatar = document.getElementById('userAvatar');
-    const username = document.getElementById('username');
-    const threadText = document.getElementById('threadText');
-    const sentimentResult = document.getElementById('sentimentResult');
-    const sentimentLabel = document.getElementById('sentimentLabel');
-    const sentimentScore = document.getElementById('sentimentScore');
-    const repliesList = document.getElementById('repliesList');
-    const repliesContainer = document.getElementById('repliesContainer');
-
-    // --- Mock Data Simulation ---
-    // This data simulates the output of your Python scripts.
-    const mockData = {
-        thread: {
-            username: "zuck",
-            user_pic: "https://placehold.co/48x48/1D9BF0/FFFFFF?text=Z",
-            text: "The new Threads API is officially rolling out! Developers can now build their own apps, create content, and much more. This is a big step for the platform.",
-            sentiment: { label: 'Positive', score: 0.9855 }
-        },
-        replies: [
-            { username: "tech_guru", text: "This is huge! Can't wait to build something cool with it.", sentiment: { label: 'Positive', score: 0.9512 } },
-            { username: "cynic_dev", text: "Let's see if it's better than the Twitter API was. I have my doubts.", sentiment: { label: 'Negative', score: 0.7523 } },
-            { username: "data_nerd", text: "What are the rate limits? That's the most important question.", sentiment: { label: 'Neutral', score: 0.8911 } },
-            { username: "crypto_bro", text: "Will this integrate with web3? That's what we really need!", sentiment: { label: 'Neutral', score: 0.8500 } }
-        ]
-    };
-
-    analyzeBtn.addEventListener('click', () => {
-        if (!threadUrlInput.value) {
-            alert("Please enter a Thread URL to analyze.");
-            return;
-        }
-
-        // 1. Hide results and show loader
-        resultsSection.classList.add('hidden');
-        loader.classList.remove('hidden');
-        loader.classList.add('flex');
-
-
-        // 2. Simulate the backend process (scraping, analysis)
-        setTimeout(() => {
-            // 3. Hide loader and display results
-            loader.classList.add('hidden');
-            loader.classList.remove('flex');
-
-            populateResults(mockData);
-
-            resultsSection.classList.remove('hidden');
-
-        }, 2500); // Simulate a 2.5-second delay
-    });
-
-    function populateResults(data) {
-        // Populate main thread
-        userAvatar.src = data.thread.user_pic;
-        username.textContent = `@${data.thread.username}`;
-        threadText.textContent = data.thread.text;
-
-        // Populate sentiment
-        const sentiment = data.thread.sentiment;
-        sentimentLabel.textContent = sentiment.label.toUpperCase();
-        sentimentScore.textContent = sentiment.score.toFixed(2);
-
-        // Update sentiment color based on label
-        sentimentResult.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-gray-100', 'text-gray-800');
-        if (sentiment.label === 'Positive') {
-            sentimentResult.classList.add('bg-green-100', 'text-green-800');
-        } else if (sentiment.label === 'Negative') {
-            sentimentResult.classList.add('bg-red-100', 'text-red-800');
-        } else {
-            sentimentResult.classList.add('bg-gray-100', 'text-gray-800');
-        }
-
-        // Populate replies
-        repliesList.innerHTML = ''; // Clear previous replies
-        if (data.replies && data.replies.length > 0) {
-            repliesContainer.classList.remove('hidden');
-            data.replies.forEach(reply => {
-                const sentimentColor = getSentimentColor(reply.sentiment.label);
-                const replyElement = document.createElement('div');
-                replyElement.className = 'bg-gray-50 p-3 rounded-lg';
-                replyElement.innerHTML = `
-                    <div class="flex justify-between items-start">
-                         <p class="font-semibold text-sm text-gray-800">@${reply.username}</p>
-                         <span class="text-xs font-bold ${sentimentColor.text} ${sentimentColor.bg} px-2 py-1 rounded-full">${reply.sentiment.label.toUpperCase()}</span>
-                    </div>
-                    <p class="text-gray-600 text-sm mt-1">${reply.text}</p>
-                `;
-                repliesList.appendChild(replyElement);
-            });
-        } else {
-             repliesContainer.classList.add('hidden');
-        }
-    }
-
-    function getSentimentColor(label) {
-        if (label === 'Positive') return { bg: 'bg-green-100', text: 'text-green-700' };
-        if (label === 'Negative') return { bg: 'bg-red-100', text: 'text-red-700' };
-        return { bg: 'bg-gray-200', text: 'text-gray-700' };
-    }
-
-</script> -->
-
 
     <script>
         const analyzeBtn = document.getElementById('analyzeBtn');
@@ -226,131 +110,150 @@
         const userAvatar = document.getElementById('userAvatar');
         const username = document.getElementById('username');
         const threadText = document.getElementById('threadText');
+        const threadMedia = document.getElementById('threadMedia'); // --- NEW ---
         const sentimentResult = document.getElementById('sentimentResult');
         const sentimentLabel = document.getElementById('sentimentLabel');
         const sentimentScore = document.getElementById('sentimentScore');
         const repliesList = document.getElementById('repliesList');
         const repliesContainer = document.getElementById('repliesContainer');
 
-        // --- NEW: API Call Logic ---
+        function calculateCombinedSentiment(post) {
+            const textSentiment = post.sentiment;
+            const imageSentiment = (post.image_descriptions && post.image_descriptions.length > 0) ?
+                post.image_descriptions[0].sentiment :
+                null;
+            if (textSentiment && imageSentiment) {
+                const avgScore = (textSentiment.score + imageSentiment.score) / 2;
+                const finalLabel = textSentiment.score > imageSentiment.score ?
+                    textSentiment.label :
+                    imageSentiment.label;
+                return {
+                    label: finalLabel,
+                    score: avgScore
+                };
+            }
+            if (textSentiment) return textSentiment;
+            if (imageSentiment) return imageSentiment;
+            return {
+                label: 'neutral',
+                score: 0.5
+            };
+        }
+
         analyzeBtn.addEventListener('click', async () => {
             const urlToAnalyze = threadUrlInput.value;
             if (!urlToAnalyze) {
                 alert("Please enter a Thread URL to analyze.");
                 return;
             }
-
-            // 1. Hide results and show loader
             resultsSection.classList.add('hidden');
             loader.classList.remove('hidden');
             loader.classList.add('flex');
-
             try {
-                // 2. Make a POST request to our Flask server
                 const response = await fetch('http://127.0.0.1:5000/analyze', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ url: urlToAnalyze }),
+                    body: JSON.stringify({
+                        url: urlToAnalyze
+                    }),
                 });
-
                 if (!response.ok) {
-                    // Handle server errors
                     const errorData = await response.json();
                     throw new Error(errorData.error || 'Something went wrong on the server.');
                 }
-
-                // 3. Get the real data back from the server
                 const data = await response.json();
-
-                // 4. Populate the UI with the real data
                 populateResults(data);
                 resultsSection.classList.remove('hidden');
-
             } catch (error) {
                 console.error('Error:', error);
                 alert(`An error occurred: ${error.message}`);
             } finally {
-                // 5. Always hide the loader when done
                 loader.classList.add('hidden');
                 loader.classList.remove('flex');
             }
         });
 
         function populateResults(data) {
-            // This function remains the same as before, but now receives real data!
-            // Populate main thread
-            // console.log("data.thread.user_pic_base64" ,data.thread.user_pic_base64)
-            // userAvatar.src = data.thread.user_pic_base64 || 'https://placehold.co/48x48/E2E8F0/4A5568?text=AV';
-
-            console.log("data.thread", data.thread)
-            console.log("data.thread.user_pic", data.thread.user_pic)
             if (data.thread.user_pic) {
-                // We construct a URL to our own server's proxy endpoint.
-                // encodeURIComponent is important to handle special characters in the URL.
-                const proxyUrl = `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(data.thread.user_pic)}`;
-
-
-                console.log("proxyUrl", proxyUrl)
-                // Set the image source to our proxy URL.
-                // The browser will now fetch the image from our server.
-                userAvatar.src = proxyUrl;
+                userAvatar.src = `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(data.thread.user_pic)}`;
             } else {
-                // Fallback to the placeholder if the URL is missing
                 userAvatar.src = 'https://placehold.co/48x48/E2E8F0/4A5568?text=AV';
             }
-
             username.textContent = `@${data.thread.username}`;
-            threadText.textContent = data.thread.text;
-
-            // Populate sentiment
-            const sentiment = data.thread.sentiment;
-            sentimentLabel.textContent = sentiment.label.toUpperCase();
-            sentimentScore.textContent = sentiment.score.toFixed(2);
-
-            // Update sentiment color
-            sentimentResult.className = 'p-4 rounded-xl flex items-center justify-between'; // Reset classes
-            if (sentiment.label.toLowerCase() === 'positive') {
-                sentimentResult.classList.add('bg-green-100', 'text-green-800');
-            } else if (sentiment.label.toLowerCase() === 'negative') {
-                sentimentResult.classList.add('bg-red-100', 'text-red-800');
+            if (data.thread.text) {
+                threadText.textContent = data.thread.text;
+            } else if (data.thread.image_descriptions && data.thread.image_descriptions.length > 0) {
+                threadText.innerHTML = `<span class="text-gray-500 italic">Image Content: "${data.thread.image_descriptions[0].description}"</span>`;
             } else {
-                sentimentResult.classList.add('bg-gray-100', 'text-gray-800');
+                threadText.textContent = "";
             }
+
+            // --- MODIFIED: Populate main thread media ---
+            threadMedia.innerHTML = ''; // Clear previous media
+            (data.thread.images || []).forEach(imgUrl => {
+                const proxyUrl = `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(imgUrl)}`;
+                threadMedia.innerHTML += `<img src="${proxyUrl}" class="w-full h-auto object-cover" alt="Thread Image">`;
+            });
+            (data.thread.videos || []).forEach(videoUrl => {
+                // Threads GIFs are mp4s, so we use a video tag that loops
+                threadMedia.innerHTML += `<video src="${videoUrl}" class="w-full h-auto" autoplay loop muted playsinline></video>`;
+            });
+
+            const finalSentiment = calculateCombinedSentiment(data.thread);
+            sentimentLabel.textContent = finalSentiment.label.toUpperCase();
+            sentimentScore.textContent = finalSentiment.score.toFixed(2);
+            sentimentResult.className = 'p-4 rounded-xl flex items-center justify-between';
+            const lowerLabel = finalSentiment.label.toLowerCase();
+            if (lowerLabel === 'positive') sentimentResult.classList.add('bg-green-100', 'text-green-800');
+            else if (lowerLabel === 'negative') sentimentResult.classList.add('bg-red-100', 'text-red-800');
+            else sentimentResult.classList.add('bg-gray-100', 'text-gray-800');
 
             // Populate replies
             repliesList.innerHTML = '';
             if (data.replies && data.replies.length > 0) {
                 repliesContainer.classList.remove('hidden');
                 data.replies.forEach(reply => {
-                    const sentimentColor = getSentimentColor(reply.sentiment.label);
+                    const finalReplySentiment = calculateCombinedSentiment(reply);
+                    const sentimentColor = getSentimentColor(finalReplySentiment.label);
+                    const userPicProxy = reply.user_pic ? `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(reply.user_pic)}` : 'https://placehold.co/32x32/E2E8F0/4A5568?text=AV';
 
-                    let proxyUrl = 'https://placehold.co/32x32/E2E8F0/4A5568?text=AV'; // Default placeholder
-                    if (reply.user_pic) {
-                        proxyUrl = `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(reply.user_pic)}`;
+                    let replyTextContent = '';
+                    if (reply.text) {
+                        replyTextContent = `<p class="text-gray-600 text-sm mt-1">${reply.text}</p>`;
+                    } else if (reply.image_descriptions && reply.image_descriptions.length > 0) {
+                        replyTextContent = `<p class="text-gray-500 text-sm mt-1 italic">Image: "${reply.image_descriptions[0].description}"</p>`;
                     }
+                    
+                    // --- MODIFIED: Generate HTML for reply media ---
+                    let replyMediaHtml = '<div class="mt-2 rounded-md overflow-hidden max-w-xs">';
+                    (reply.images || []).forEach(imgUrl => {
+                        const proxyUrl = `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(imgUrl)}`;
+                        replyMediaHtml += `<img src="${proxyUrl}" class="w-full h-auto object-cover" alt="Reply Image">`;
+                    });
+                    (reply.videos || []).forEach(videoUrl => {
+                         replyMediaHtml += `<video src="${videoUrl}" class="w-full h-auto" autoplay loop muted playsinline></video>`;
+                    });
+                    replyMediaHtml += '</div>';
 
                     const replyElement = document.createElement('div');
                     replyElement.className = 'bg-gray-50 p-3 rounded-lg';
                     replyElement.innerHTML = `
-
-              
- <div class="flex items-start space-x-3">
-            
-            <!-- This is the new avatar image -->
-            <img src="${proxyUrl}" class="w-8 h-8 rounded-full bg-gray-200" alt="User Avatar">
-            
-            <div class="flex-grow">
-                <div class="flex justify-between items-start">
-                     <p class="font-semibold text-sm text-gray-800">@${reply.username}</p>
-                         <span class="text-xs font-bold ${sentimentColor.text} ${sentimentColor.bg} px-2 py-1 rounded-full">${reply.sentiment.label.toUpperCase()}</span>
-                </div>
-                <p class="text-gray-600 text-sm mt-1">${reply.text}</p>
-            </div>
-        </div>
-
-                `;
+                        <div class="flex items-start space-x-3">
+                            <img src="${userPicProxy}" class="w-8 h-8 rounded-full bg-gray-200" alt="User Avatar">
+                            <div class="flex-grow">
+                                <div class="flex justify-between items-start">
+                                    <p class="font-semibold text-sm text-gray-800">@${reply.username}</p>
+                                    <span class="text-xs font-bold ${sentimentColor.text} ${sentimentColor.bg} px-2 py-1 rounded-full">
+                                        ${finalReplySentiment.label.toUpperCase()} (${finalReplySentiment.score.toFixed(2)})
+                                    </span>
+                                </div>
+                                ${replyTextContent}
+                                ${replyMediaHtml}
+                            </div>
+                        </div>
+                    `;
                     repliesList.appendChild(replyElement);
                 });
             } else {
@@ -360,9 +263,18 @@
 
         function getSentimentColor(label) {
             const lowerLabel = label.toLowerCase();
-            if (lowerLabel === 'positive') return { bg: 'bg-green-100', text: 'text-green-700' };
-            if (lowerLabel === 'negative') return { bg: 'bg-red-100', text: 'text-red-700' };
-            return { bg: 'bg-gray-200', text: 'text-gray-700' };
+            if (lowerLabel === 'positive') return {
+                bg: 'bg-green-100',
+                text: 'text-green-700'
+            };
+            if (lowerLabel === 'negative') return {
+                bg: 'bg-red-100',
+                text: 'text-red-700'
+            };
+            return {
+                bg: 'bg-gray-200',
+                text: 'text-gray-700'
+            };
         }
     </script>
 </body>
