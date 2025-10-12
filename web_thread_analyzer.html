@@ -59,28 +59,29 @@
             </div>
 
             <div id="results" class="mt-8 hidden">
-                <h2 class="text-2xl font-bold text-gray-800 border-b-2 pb-2 mb-4">Analysis Result</h2>
-
+                    <button id="backBtn" class="hidden p-2 rounded-full hover:bg-gray-200 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                    </button>
+                <div class="flex items-center gap-4 mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800 border-b-2 pb-2 flex-grow">Analysis Result</h2>
+                </div>
                 <div class="bg-gray-50 p-4 rounded-xl">
                     <div class="flex items-start space-x-3">
                         <img src="https://placehold.co/48x48/E2E8F0/4A5568?text=AV" id="userAvatar"
                             class="w-12 h-12 rounded-full" alt="User Avatar">
-                        <div>
-                            <p class="font-semibold text-gray-900" id="username">@username</p>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-start">
+                                <p class="font-semibold text-gray-900" id="username">@username</p>
+                                <span id="mainPostSentimentBadge"></span>
+                            </div>
                             <p class="text-gray-700 mt-1" id="threadText">This is where the text of the
                                 analyzed thread will appear.</p>
                             
                             <div id="threadMedia" class="mt-3 rounded-lg overflow-hidden max-w-sm"></div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="mt-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Sentiment</h3>
-                    <div id="sentimentResult" class="p-4 rounded-xl flex items-center justify-between">
-                        <span class="text-xl font-bold" id="sentimentLabel">NEUTRAL</span>
-                        <span class="text-2xl font-bold" id="sentimentScore">0.00</span>
-                    </div>
+                         </div>
                 </div>
 
                 <div id="repliesContainer" class="mt-6">
@@ -105,60 +106,56 @@
         const threadUrlInput = document.getElementById('threadUrl');
         const resultsSection = document.getElementById('results');
         const loader = document.getElementById('loader');
+        const backBtn = document.getElementById('backBtn'); // New back button
 
         // Result elements
         const userAvatar = document.getElementById('userAvatar');
         const username = document.getElementById('username');
         const threadText = document.getElementById('threadText');
-        const threadMedia = document.getElementById('threadMedia'); // --- NEW ---
-        const sentimentResult = document.getElementById('sentimentResult');
-        const sentimentLabel = document.getElementById('sentimentLabel');
-        const sentimentScore = document.getElementById('sentimentScore');
+        const threadMedia = document.getElementById('threadMedia');
         const repliesList = document.getElementById('repliesList');
         const repliesContainer = document.getElementById('repliesContainer');
+        const mainPostSentimentBadge = document.getElementById('mainPostSentimentBadge');
 
-        function calculateCombinedSentiment(post) {
-            const textSentiment = post.sentiment;
-            const imageSentiment = (post.image_descriptions && post.image_descriptions.length > 0) ?
-                post.image_descriptions[0].sentiment :
-                null;
-            if (textSentiment && imageSentiment) {
-                const avgScore = (textSentiment.score + imageSentiment.score) / 2;
-                const finalLabel = textSentiment.score > imageSentiment.score ?
-                    textSentiment.label :
-                    imageSentiment.label;
-                return {
-                    label: finalLabel,
-                    score: avgScore
-                };
-            }
-            if (textSentiment) return textSentiment;
-            if (imageSentiment) return imageSentiment;
-            return {
-                label: 'neutral',
-                score: 0.5
-            };
-        }
+        // --- START: State Management ---
+        let historyStack = []; // Holds the history of analyzed URLs
+        // --- END: State Management ---
 
-        analyzeBtn.addEventListener('click', async () => {
+        // Main analyze button starts a new analysis, clearing history
+        analyzeBtn.addEventListener('click', () => {
             const urlToAnalyze = threadUrlInput.value;
             if (!urlToAnalyze) {
                 alert("Please enter a Thread URL to analyze.");
                 return;
             }
+            // Start a new history
+            historyStack = [urlToAnalyze];
+            analyzeUrl(urlToAnalyze);
+        });
+
+        // Back button navigates through the history
+        backBtn.addEventListener('click', () => {
+            if (historyStack.length > 1) {
+                historyStack.pop(); // Remove current URL
+                const previousUrl = historyStack[historyStack.length - 1]; // Get the last one
+                analyzeUrl(previousUrl);
+            }
+        });
+
+        // Refactored main analysis function
+        async function analyzeUrl(url) {
+            threadUrlInput.value = url; // Keep input field in sync
             resultsSection.classList.add('hidden');
             loader.classList.remove('hidden');
             loader.classList.add('flex');
+
             try {
                 const response = await fetch('http://127.0.0.1:5000/analyze', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        url: urlToAnalyze
-                    }),
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url }),
                 });
+
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.error || 'Something went wrong on the server.');
@@ -166,22 +163,28 @@
                 const data = await response.json();
                 populateResults(data);
                 resultsSection.classList.remove('hidden');
+
             } catch (error) {
                 console.error('Error:', error);
                 alert(`An error occurred: ${error.message}`);
+                // If an error occurs, try to go back in history
+                if (historyStack.length > 1) {
+                    historyStack.pop();
+                }
             } finally {
                 loader.classList.add('hidden');
                 loader.classList.remove('flex');
+                updateBackButtonVisibility(); // Update the back button state
             }
-        });
+        }
 
         function populateResults(data) {
-            if (data.thread.user_pic) {
-                userAvatar.src = `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(data.thread.user_pic)}`;
-            } else {
-                userAvatar.src = 'https://placehold.co/48x48/E2E8F0/4A5568?text=AV';
-            }
+            // Populate main thread info
+            userAvatar.src = data.thread.user_pic 
+                ? `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(data.thread.user_pic)}` 
+                : 'https://placehold.co/48x48/E2E8F0/4A5568?text=AV';
             username.textContent = `@${data.thread.username}`;
+
             if (data.thread.text) {
                 threadText.textContent = data.thread.text;
             } else if (data.thread.image_descriptions && data.thread.image_descriptions.length > 0) {
@@ -190,25 +193,23 @@
                 threadText.textContent = "";
             }
 
-            // --- MODIFIED: Populate main thread media ---
-            threadMedia.innerHTML = ''; // Clear previous media
+            threadMedia.innerHTML = '';
             (data.thread.images || []).forEach(imgUrl => {
                 const proxyUrl = `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(imgUrl)}`;
                 threadMedia.innerHTML += `<img src="${proxyUrl}" class="w-full h-auto object-cover" alt="Thread Image">`;
             });
             (data.thread.videos || []).forEach(videoUrl => {
-                // Threads GIFs are mp4s, so we use a video tag that loops
                 threadMedia.innerHTML += `<video src="${videoUrl}" class="w-full h-auto" autoplay loop muted playsinline></video>`;
             });
 
             const finalSentiment = calculateCombinedSentiment(data.thread);
-            sentimentLabel.textContent = finalSentiment.label.toUpperCase();
-            sentimentScore.textContent = finalSentiment.score.toFixed(2);
-            sentimentResult.className = 'p-4 rounded-xl flex items-center justify-between';
-            const lowerLabel = finalSentiment.label.toLowerCase();
-            if (lowerLabel === 'positive') sentimentResult.classList.add('bg-green-100', 'text-green-800');
-            else if (lowerLabel === 'negative') sentimentResult.classList.add('bg-red-100', 'text-red-800');
-            else sentimentResult.classList.add('bg-gray-100', 'text-gray-800');
+            if (finalSentiment) {
+                const sentimentColor = getSentimentColor(finalSentiment.label);
+                mainPostSentimentBadge.className = `text-xs font-bold ${sentimentColor.text} ${sentimentColor.bg} px-2 py-1 rounded-full`;
+                mainPostSentimentBadge.innerHTML = `${finalSentiment.label.toUpperCase()} (${finalSentiment.score.toFixed(2)})`;
+            } else {
+                 mainPostSentimentBadge.innerHTML = '';
+            }
 
             // Populate replies
             repliesList.innerHTML = '';
@@ -216,6 +217,8 @@
                 repliesContainer.classList.remove('hidden');
                 data.replies.forEach(reply => {
                     const finalReplySentiment = calculateCombinedSentiment(reply);
+                    if (!finalReplySentiment) return;
+                    
                     const sentimentColor = getSentimentColor(finalReplySentiment.label);
                     const userPicProxy = reply.user_pic ? `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(reply.user_pic)}` : 'https://placehold.co/32x32/E2E8F0/4A5568?text=AV';
 
@@ -226,11 +229,9 @@
                         replyTextContent = `<p class="text-gray-500 text-sm mt-1 italic">Image: "${reply.image_descriptions[0].description}"</p>`;
                     }
                     
-                    // --- MODIFIED: Generate HTML for reply media ---
                     let replyMediaHtml = '<div class="mt-2 rounded-md overflow-hidden max-w-xs">';
                     (reply.images || []).forEach(imgUrl => {
-                        const proxyUrl = `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(imgUrl)}`;
-                        replyMediaHtml += `<img src="${proxyUrl}" class="w-full h-auto object-cover" alt="Reply Image">`;
+                        replyMediaHtml += `<img src="http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(imgUrl)}" class="w-full h-auto object-cover" alt="Reply Image">`;
                     });
                     (reply.videos || []).forEach(videoUrl => {
                          replyMediaHtml += `<video src="${videoUrl}" class="w-full h-auto" autoplay loop muted playsinline></video>`;
@@ -254,27 +255,54 @@
                             </div>
                         </div>
                     `;
+
+                    // --- START: Make Reply Clickable ---
+                    if (reply.url) {
+                        replyElement.classList.add('cursor-pointer', 'transition', 'hover:bg-gray-100');
+                        replyElement.dataset.url = reply.url; // Store URL in data attribute
+                        replyElement.addEventListener('click', () => {
+                            const urlToAnalyze = replyElement.dataset.url;
+                            historyStack.push(urlToAnalyze);
+                            analyzeUrl(urlToAnalyze);
+                        });
+                    }
+                    // --- END: Make Reply Clickable ---
+
                     repliesList.appendChild(replyElement);
                 });
             } else {
                 repliesContainer.classList.add('hidden');
             }
         }
+        
+        // --- START: New UI Helper Functions ---
+        function updateBackButtonVisibility() {
+            if (historyStack.length > 1) {
+                backBtn.classList.remove('hidden');
+            } else {
+                backBtn.classList.add('hidden');
+            }
+        }
+        // --- END: New UI Helper Functions ---
+
+        function calculateCombinedSentiment(post) {
+            const textSentiment = post.sentiment;
+            const imageSentiment = (post.image_descriptions && post.image_descriptions.length > 0) 
+                ? post.image_descriptions[0].sentiment 
+                : null;
+            if (textSentiment && imageSentiment) {
+                const finalLabel = textSentiment.score > imageSentiment.score ? textSentiment.label : imageSentiment.label;
+                const avgScore = (textSentiment.score + imageSentiment.score) / 2;
+                return { label: finalLabel, score: avgScore };
+            }
+            return textSentiment || imageSentiment || null;
+        }
 
         function getSentimentColor(label) {
             const lowerLabel = label.toLowerCase();
-            if (lowerLabel === 'positive') return {
-                bg: 'bg-green-100',
-                text: 'text-green-700'
-            };
-            if (lowerLabel === 'negative') return {
-                bg: 'bg-red-100',
-                text: 'text-red-700'
-            };
-            return {
-                bg: 'bg-gray-200',
-                text: 'text-gray-700'
-            };
+            if (lowerLabel === 'positive') return { bg: 'bg-green-100', text: 'text-green-700' };
+            if (lowerLabel === 'negative') return { bg: 'bg-red-100', text: 'text-red-700' };
+            return { bg: 'bg-gray-200', text: 'text-gray-700' };
         }
     </script>
 </body>
