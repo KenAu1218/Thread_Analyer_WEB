@@ -150,7 +150,7 @@
             loader.classList.add('flex');
 
             try {
-                const response = await fetch('http://127.0.0.1:5000/analyze', {
+                const response = await fetch('http://127.0.0.1:8800/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: url }),
@@ -181,7 +181,7 @@
         function populateResults(data) {
             // Populate main thread info
             userAvatar.src = data.thread.user_pic 
-                ? `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(data.thread.user_pic)}` 
+                ? `http://127.0.0.1:8800/image-proxy?url=${encodeURIComponent(data.thread.user_pic)}` 
                 : 'https://placehold.co/48x48/E2E8F0/4A5568?text=AV';
             username.textContent = `@${data.thread.username}`;
 
@@ -195,7 +195,7 @@
 
             threadMedia.innerHTML = '';
             (data.thread.images || []).forEach(imgUrl => {
-                const proxyUrl = `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(imgUrl)}`;
+                const proxyUrl = `http://127.0.0.1:8800/image-proxy?url=${encodeURIComponent(imgUrl)}`;
                 threadMedia.innerHTML += `<img src="${proxyUrl}" class="w-full h-auto object-cover" alt="Thread Image">`;
             });
             (data.thread.videos || []).forEach(videoUrl => {
@@ -220,7 +220,7 @@
                     if (!finalReplySentiment) return;
                     
                     const sentimentColor = getSentimentColor(finalReplySentiment.label);
-                    const userPicProxy = reply.user_pic ? `http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(reply.user_pic)}` : 'https://placehold.co/32x32/E2E8F0/4A5568?text=AV';
+                    const userPicProxy = reply.user_pic ? `http://127.0.0.1:8800/image-proxy?url=${encodeURIComponent(reply.user_pic)}` : 'https://placehold.co/32x32/E2E8F0/4A5568?text=AV';
 
                     let replyTextContent = '';
                     if (reply.text) {
@@ -231,7 +231,7 @@
                     
                     let replyMediaHtml = '<div class="mt-2 rounded-md overflow-hidden max-w-xs">';
                     (reply.images || []).forEach(imgUrl => {
-                        replyMediaHtml += `<img src="http://127.0.0.1:5000/image-proxy?url=${encodeURIComponent(imgUrl)}" class="w-full h-auto object-cover" alt="Reply Image">`;
+                        replyMediaHtml += `<img src="http://127.0.0.1:8800/image-proxy?url=${encodeURIComponent(imgUrl)}" class="w-full h-auto object-cover" alt="Reply Image">`;
                     });
                     (reply.videos || []).forEach(videoUrl => {
                          replyMediaHtml += `<video src="${videoUrl}" class="w-full h-auto" autoplay loop muted playsinline></video>`;
