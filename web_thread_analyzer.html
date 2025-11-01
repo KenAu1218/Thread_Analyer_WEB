@@ -363,15 +363,17 @@
 
         function calculateCombinedSentiment(post) {
             const textSentiment = post.sentiment;
-            const imageSentiment = (post.image_descriptions && post.image_descriptions.length > 0)
-                ? post.image_descriptions[0].sentiment
-                : null;
-            if (textSentiment && imageSentiment) {
-                const finalLabel = textSentiment.score > imageSentiment.score ? textSentiment.label : imageSentiment.label;
-                const avgScore = (textSentiment.score + imageSentiment.score) / 2;
-                return { label: finalLabel, score: avgScore };
-            }
-            return textSentiment || imageSentiment || null;
+            // const imageSentiment = (post.image_descriptions && post.image_descriptions.length > 0)
+            //     ? post.image_descriptions[0].sentiment
+            //     : null;
+            // if (textSentiment && imageSentiment) {
+            //     const finalLabel = textSentiment.score > imageSentiment.score ? textSentiment.label : imageSentiment.label;
+            //     const avgScore = (textSentiment.score + imageSentiment.score) / 2;
+            //     return { label: finalLabel, score: avgScore };
+            // }
+
+            // return textSentiment || imageSentiment || null;
+            return textSentiment || null;
         }
 
         function getSentimentColor(label) {
