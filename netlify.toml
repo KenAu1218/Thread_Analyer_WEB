@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/"
+  to = "/web_thread_analyzer.html"
+  status = 200
