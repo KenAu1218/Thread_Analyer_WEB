@@ -37,16 +37,28 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Smooth fade for modal */
+        .modal-transition {
+            transition: opacity 0.3s ease-in-out;
+        }
     </style>
 </head>
 
 <body class="bg-sky-400 min-h-screen flex items-center justify-center p-4">
 
-    <div class="fixed top-4 right-4 z-50">
+    <div class="fixed top-4 right-4 z-50 flex gap-3 items-center">
+        <button id="infoBtn"
+            class="w-10 h-10 flex items-center justify-center bg-white text-sky-600 font-serif font-bold text-lg rounded-full shadow-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-all transform hover:scale-105"
+            title="Usage Guide">
+            i
+        </button>
+
         <button id="modeToggleBtn"
             class="font-semibold py-2 px-5 rounded-full shadow-lg text-sm transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2">
-            </button>
+        </button>
     </div>
+
     <div class="w-full max-w-2xl mx-auto">
         <header class="text-center mb-8">
             <h1 class="font-gameboy text-3xl md:text-4xl text-white text-shadow-lg">Thread Sentiment
@@ -108,15 +120,84 @@
         </main>
     </div>
 
+    <div id="usageModal" class="fixed inset-0 z-[60] hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" id="modalBackdrop"></div>
+
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div
+                    class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                <h3 class="text-xl font-bold leading-6 text-gray-900 border-b pb-2 mb-4"
+                                    id="modal-title">
+                                    How to Use
+                                </h3>
+                                <div class="mt-2 text-sm text-gray-600 space-y-4">
+
+                                    <div class="flex gap-2 items-start">
+                                        <strong class="text-sky-600 shrink-0">1. Find a Post:</strong>
+                                        <p>Go to Threads.net and find a conversation you want to analyze.</p>
+                                    </div>
+
+                                    <div class="flex gap-2 items-start">
+                                        <strong class="text-sky-600 shrink-0">2. Copy URL:</strong>
+
+                                        <div class="flex-1 min-w-0">
+                                            <p class="mb-2">
+                                                Click the <strong>three-dot menu (...)</strong> on the post and select
+                                                <strong>"Copy link"</strong>.
+                                            </p>
+
+                                            <img src="./asset/example.png" alt="Example of how to copy link from menu"
+                                                class="rounded-lg border border-gray-200  h-auto object-cover shadow-sm mx-auto block">
+
+                                            <p class="text-xs text-gray-400 mt-1  mx-auto text-center">
+                                                (Alternatively, you can copy the URL from your browser's address bar.)
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-2 items-start">
+                                        <strong class="text-sky-600 shrink-0">3. Analyze:</strong>
+                                        <p>Paste it into the input box and click "Analyze".</p>
+                                    </div>
+
+                                    <div class="flex gap-2 items-start">
+                                        <strong class="text-sky-600 shrink-0">4. Explore:</strong>
+                                        <p>View the sentiment score of the main post and click on any reply to analyze
+                                            that specific conversation thread recursively.</p>
+                                    </div>
+
+                                    <div class="bg-gray-100 p-3 rounded-lg mt-4 text-xs text-gray-500">
+                                        <strong>Note:</strong> Currently, we only support English text-based threads.
+                                        Scores for other languages may not be accurate. The analysis is powered by the
+                                        "cardiffnlp/twitter-roberta-base-sentiment-latest" model.
+                                    </div>
+                                    <div class="bg-gray-100 p-3 rounded-lg mt-4 text-xs text-gray-500">
+                                        <strong>Note:</strong> The "Production/Debug" toggle allows developers to switch
+                                        between the live server and a local testing server.
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" id="closeModalBtn"
+                            class="inline-flex w-full justify-center rounded-md bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500 sm:ml-3 sm:w-auto">
+                            Got it
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- START: Dynamic Debug Logic ---
-
-        /**
-         * Checks for debug mode in this order:
-         * 1. URL parameter (?debug=true or ?debug=false)
-         * 2. Local storage setting (from the checkbox)
-         * 3. Default: false (production)
-         */
         function isDebugMode() {
             const urlParams = new URLSearchParams(window.location.search);
             const debugParam = urlParams.get('debug');
@@ -135,7 +216,7 @@
         const API_BASE_URL = DEBUG_MODE
             ? 'http://127.0.0.1:8800' // Your local server
             : 'https://thread-analyzer-api-145988394831.us-central1.run.app'; // Your live server
-        
+
         // --- END: Dynamic Debug Logic ---
 
 
@@ -144,42 +225,52 @@
         const resultsSection = document.getElementById('results');
         const loader = document.getElementById('loader');
         const backBtn = document.getElementById('backBtn');
-        const modeToggleBtn = document.getElementById('modeToggleBtn'); // Get the new button
+        const modeToggleBtn = document.getElementById('modeToggleBtn');
 
-        // --- START: New Button Logic ---
+        // --- NEW: Modal Logic ---
+        const infoBtn = document.getElementById('infoBtn');
+        const usageModal = document.getElementById('usageModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const modalBackdrop = document.getElementById('modalBackdrop');
 
-        /**
-         * Updates the toggle button's appearance based on the current mode.
-         */
+        // Open Modal
+        infoBtn.addEventListener('click', () => {
+            usageModal.classList.remove('hidden');
+        });
+
+        // Close Modal Function
+        const closeModal = () => {
+            usageModal.classList.add('hidden');
+        };
+
+        // Close on Button Click
+        closeModalBtn.addEventListener('click', closeModal);
+
+        // Close on Backdrop Click
+        modalBackdrop.addEventListener('click', closeModal);
+        // --- END: Modal Logic ---
+
+
+        // --- START: Toggle Button Logic ---
         function updateToggleAppearance() {
             if (DEBUG_MODE) {
-                // Set for Debug
                 modeToggleBtn.textContent = 'Debug';
                 modeToggleBtn.classList.remove('bg-green-500', 'text-white', 'hover:bg-green-600', 'focus:ring-green-500');
                 modeToggleBtn.classList.add('bg-gray-200', 'text-gray-800', 'hover:bg-gray-300', 'focus:ring-gray-400');
             } else {
-                // Set for Production
                 modeToggleBtn.textContent = 'Production';
                 modeToggleBtn.classList.remove('bg-gray-200', 'text-gray-800', 'hover:bg-gray-300', 'focus:ring-gray-400');
                 modeToggleBtn.classList.add('bg-green-500', 'text-white', 'hover:bg-green-600', 'focus:ring-green-500');
             }
         }
-
-        // On page load, set the button's text and color
         updateToggleAppearance();
 
-        // Add a listener to save the setting and reload the page
         modeToggleBtn.addEventListener('click', () => {
-            const newMode = !DEBUG_MODE; // Calculate the *new* mode
-            
-            // Save the new choice in local storage
+            const newMode = !DEBUG_MODE;
             localStorage.setItem('API_DEBUG_MODE', newMode);
-            
-            // Reload the page to apply the new setting
-            // alert(`Mode set to: ${newMode ? 'DEBUG' : 'PRODUCTION'}. The page will now reload.`);
-            window.location.href = window.location.pathname; 
+            window.location.href = window.location.pathname;
         });
-        // --- END: New Button Logic ---
+        // --- END: Toggle Button Logic ---
 
 
         // Result elements
@@ -192,39 +283,34 @@
         const mainPostSentimentBadge = document.getElementById('mainPostSentimentBadge');
 
         // --- START: State Management ---
-        let historyStack = []; // Holds the history of analyzed URLs
+        let historyStack = [];
         // --- END: State Management ---
 
-        // Main analyze button starts a new analysis, clearing history
         analyzeBtn.addEventListener('click', () => {
             const urlToAnalyze = threadUrlInput.value;
             if (!urlToAnalyze) {
                 alert("Please enter a Thread URL to analyze.");
                 return;
             }
-            // Start a new history
             historyStack = [urlToAnalyze];
             analyzeUrl(urlToAnalyze);
         });
 
-        // Back button navigates through the history
         backBtn.addEventListener('click', () => {
             if (historyStack.length > 1) {
-                historyStack.pop(); // Remove current URL
-                const previousUrl = historyStack[historyStack.length - 1]; // Get the last one
+                historyStack.pop();
+                const previousUrl = historyStack[historyStack.length - 1];
                 analyzeUrl(previousUrl);
             }
         });
 
-        // Refactored main analysis function
         async function analyzeUrl(url) {
-            threadUrlInput.value = url; // Keep input field in sync
+            threadUrlInput.value = url;
             resultsSection.classList.add('hidden');
             loader.classList.remove('hidden');
             loader.classList.add('flex');
 
             try {
-                // This URL is now dynamic
                 const response = await fetch(`${API_BASE_URL}/analyze`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -242,20 +328,17 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert(`An error occurred: ${error.message}`);
-                // If an error occurs, try to go back in history
                 if (historyStack.length > 1) {
                     historyStack.pop();
                 }
             } finally {
                 loader.classList.add('hidden');
                 loader.classList.remove('flex');
-                updateBackButtonVisibility(); // Update the back button state
+                updateBackButtonVisibility();
             }
         }
 
-       function populateResults(data) {
-            // Populate main thread info
-            // These URLs are now dynamic
+        function populateResults(data) {
             userAvatar.src = data.thread.user_pic
                 ? `${API_BASE_URL}/image-proxy?url=${encodeURIComponent(data.thread.user_pic)}`
                 : 'https://placehold.co/48x48/E2E8F0/4A5568?text=AV';
@@ -287,18 +370,14 @@
                 mainPostSentimentBadge.innerHTML = '';
             }
 
-            // Populate replies
             repliesList.innerHTML = '';
             if (data.replies && data.replies.length > 0) {
                 repliesContainer.classList.remove('hidden');
                 data.replies.forEach(reply => {
                     const finalReplySentiment = calculateCombinedSentiment(reply);
-                    console.log("reply.gifImages: ",reply.gifImages)
 
-                    // 1. Create a variable for the badge HTML
                     let sentimentBadgeHtml = '';
 
-                    // 2. Check if sentiment exists, and build the badge *if* it does
                     if (finalReplySentiment) {
                         const sentimentColor = getSentimentColor(finalReplySentiment.label);
                         sentimentBadgeHtml = `
@@ -307,7 +386,6 @@
                             </span>
                         `;
                     }
-
 
                     const userPicProxy = reply.user_pic ? `${API_BASE_URL}/image-proxy?url=${encodeURIComponent(reply.user_pic)}` : 'https://placehold.co/32x32/E2E8F0/4A5568?text=AV';
 
@@ -322,11 +400,10 @@
                     (reply.images || []).forEach(imgUrl => {
                         replyMediaHtml += `<img src="${API_BASE_URL}/image-proxy?url=${encodeURIComponent(imgUrl)}" class="w-full h-auto object-cover" alt="Reply Image">`;
                     });
-                
+
                     (reply.gifImages || []).forEach(gifImageUrl => {
                         replyMediaHtml += `<img src="${API_BASE_URL}/image-proxy?url=${encodeURIComponent(gifImageUrl)}" class="w-full h-auto object-cover" alt="Reply Image">`;
                     });
-                  
 
                     (reply.videos || []).forEach(videoUrl => {
                         replyMediaHtml += `<video src="${videoUrl}" class="w-full h-auto" autoplay loop muted playsinline></video>`;
@@ -349,17 +426,15 @@
                         </div>
                     `;
 
-                    // --- START: Make Reply Clickable ---
                     if (reply.url) {
                         replyElement.classList.add('cursor-pointer', 'transition', 'hover:bg-gray-100');
-                        replyElement.dataset.url = reply.url; // Store URL in data attribute
+                        replyElement.dataset.url = reply.url;
                         replyElement.addEventListener('click', () => {
                             const urlToAnalyze = replyElement.dataset.url;
                             historyStack.push(urlToAnalyze);
                             analyzeUrl(urlToAnalyze);
                         });
                     }
-                    // --- END: Make Reply Clickable ---
 
                     repliesList.appendChild(replyElement);
                 });
@@ -368,7 +443,6 @@
             }
         }
 
-        // --- START: New UI Helper Functions ---
         function updateBackButtonVisibility() {
             if (historyStack.length > 1) {
                 backBtn.classList.remove('hidden');
@@ -376,20 +450,9 @@
                 backBtn.classList.add('hidden');
             }
         }
-        // --- END: New UI Helper Functions ---
 
         function calculateCombinedSentiment(post) {
             const textSentiment = post.sentiment;
-            // const imageSentiment = (post.image_descriptions && post.image_descriptions.length > 0)
-            //     ? post.image_descriptions[0].sentiment
-            //     : null;
-            // if (textSentiment && imageSentiment) {
-            //     const finalLabel = textSentiment.score > imageSentiment.score ? textSentiment.label : imageSentiment.label;
-            //     const avgScore = (textSentiment.score + imageSentiment.score) / 2;
-            //     return { label: finalLabel, score: avgScore };
-            // }
-
-            // return textSentiment || imageSentiment || null;
             return textSentiment || null;
         }
 
